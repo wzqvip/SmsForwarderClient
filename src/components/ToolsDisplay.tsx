@@ -70,7 +70,7 @@ export default defineComponent({
         const data = await progress.attach(api.location(props.server.host, props.server.secret));
         location.value = data;
       } catch (e: any) {
-        message.error('获取定位失败: ' + e.message);
+        console.warn('获取定位失败:', e);
       }
       locationLoad.value = false;
     };
@@ -201,16 +201,28 @@ export default defineComponent({
                       <NDescriptionsItem label="位置信息">{location.value.address || '未知地址'}</NDescriptionsItem>
                       <NDescriptionsItem label="定位源">{location.value.provider || '未知'}</NDescriptionsItem>
                     </NDescriptions>
-                    <NButton
-                      size="small"
-                      type="info"
-                      ghost
-                      onClick={() => {
-                        window.open(`https://uri.amap.com/marker?position=${location.value?.longitude},${location.value?.latitude}&name=设备位置`);
-                      }}
-                    >
-                      在高德地图中查看
-                    </NButton>
+                    <NSpace>
+                      <NButton
+                        size="small"
+                        type="info"
+                        ghost
+                        onClick={() => {
+                          window.open(`https://uri.amap.com/marker?position=${location.value?.longitude},${location.value?.latitude}&name=设备位置`);
+                        }}
+                      >
+                        在高德地图中查看
+                      </NButton>
+                      <NButton
+                        size="small"
+                        type="success"
+                        ghost
+                        onClick={() => {
+                          window.open(`https://www.google.com/maps/search/?api=1&query=${location.value?.latitude},${location.value?.longitude}`);
+                        }}
+                      >
+                        在谷歌地图中查看
+                      </NButton>
+                    </NSpace>
                   </NSpace>
                 ) : (
                   <div style={{ color: '#999', textAlign: 'center', padding: '20px' }}>暂无定位数据</div>
