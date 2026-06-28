@@ -1,4 +1,4 @@
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useStorage } from '@vueuse/core';
 import {
   NLayout,
@@ -32,6 +32,42 @@ export default defineComponent({
     const editingServer = ref<Server>();
     const message = useMessage();
     const fileInputRef = ref<HTMLInputElement | null>(null);
+    const siderWidth = ref(260);
+
+    onMounted(() => {
+      const sider = document.querySelector('.n-layout-sider');
+      if (!sider) return;
+      const border = sider.querySelector('.n-layout-sider__border') as HTMLElement;
+      if (!border) return;
+
+      border.style.cursor = 'col-resize';
+      border.style.width = '6px';
+      border.style.right = '-3px';
+      border.style.left = 'auto';
+      border.style.zIndex = '10';
+
+      border.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = siderWidth.value;
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+          const deltaX = moveEvent.clientX - startX;
+          let newWidth = startWidth + deltaX;
+          if (newWidth < 200) newWidth = 200;
+          if (newWidth > 450) newWidth = 450;
+          siderWidth.value = newWidth;
+        };
+
+        const onMouseUp = () => {
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      });
+    });
 
     const handleSaveServer = (oldName: string, updatedServer: Server) => {
       const index = servers.value.findIndex(it => it.name === oldName);
@@ -105,7 +141,10 @@ export default defineComponent({
         collapse-mode="width"
         collapsed-width={0}
         resizable
-        default-width={260}
+        width={siderWidth.value}
+        onUpdate:width={(val: number) => {
+          siderWidth.value = val;
+        }}
         min-width={200}
         max-width={450}
         content-style="padding: 12px; display: flex; flex-direction: column; gap: 12px; height: 100%; box-sizing: border-box;"
