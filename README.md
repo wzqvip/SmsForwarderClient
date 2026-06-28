@@ -2,7 +2,7 @@
 
 为 [SmsForwarder](https://github.com/pppscn/SmsForwarder) 设计的跨平台桌面客户端，基于 Vite + Vue3 + Tauri 构建。
 
-[在线使用](https://smsforwarderclient.pages.dev) （HTTPS 访问时不支持连接非 HTTPS 服务器）
+[在线使用](https://wzqvip.github.io/SmsForwarderClient/) （HTTPS 访问时不支持连接非 HTTPS 服务器）
 
 ---
 
@@ -54,6 +54,14 @@ npm run build
 ```
 
 打包生成的文件将保存在 `dist/` 目录下。
+
+### 5. GitHub Pages 自动部署
+
+仓库已配置 `.github/workflows/deploy-pages.yml`，会在以下场景自动重新构建并发布站点：
+
+- `main` 分支有新提交时；
+- 仓库出现新评论时（`issue_comment.created`）；
+- 手动触发 `workflow_dispatch`。
 
 ### 4. 运行 / 编译 Tauri 桌面客户端
 
