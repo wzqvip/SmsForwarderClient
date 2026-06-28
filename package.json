@@ -6,6 +6,7 @@
     "dev:expose": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
+    "tauri": "tauri",
     "lint": "eslint src/**/*.{ts,tsx,js,jsx} --fix"
   },
   "devDependencies": {
