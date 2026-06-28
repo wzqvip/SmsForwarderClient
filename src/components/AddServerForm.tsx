@@ -14,6 +14,7 @@ export default defineComponent({
     const form = ref({
       name: '',
       host: 'http://',
+      secret: '',
     });
     const formRef = ref<FormInst>();
     const rules = {
@@ -35,6 +36,7 @@ export default defineComponent({
           form.value = {
             name: '',
             host: 'http://',
+            secret: '',
           };
           show.value = false;
         }
@@ -63,6 +65,15 @@ export default defineComponent({
               <NInput
                 //@ts-ignore
                 vModel:value={form.value.host}
+              />
+            </NFormItem>
+            <NFormItem label="密钥 (可选)" path="secret">
+              <NInput
+                type="password"
+                show-password-on="click"
+                placeholder="服务器“安全设置”开启了“校验签名”时填写"
+                //@ts-ignore
+                vModel:value={form.value.secret}
               />
             </NFormItem>
           </NForm>,

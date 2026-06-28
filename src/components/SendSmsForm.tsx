@@ -51,7 +51,7 @@ export default defineComponent({
         if (!errors) {
           load.value = true;
           try {
-            const res = await progress.attach(api.sendSms(props.server.host, form.value));
+            const res = await progress.attach(api.sendSms(props.server.host, props.server.secret, form.value));
             message.success(res);
             show.value = false;
           }

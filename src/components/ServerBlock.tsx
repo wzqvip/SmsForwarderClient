@@ -1,4 +1,4 @@
-import { defineComponent, PropType, ref, effect } from 'vue';
+import { defineComponent, PropType, ref, watch } from 'vue';
 import { Battery } from '@/types/api';
 import api from '@/requests/api.ts';
 import { NThing, NText } from 'naive-ui';
@@ -13,15 +13,19 @@ export default defineComponent({
     const battery = ref<Battery>();
     const error = ref('');
 
-    effect(async () => {
+    const checkBattery = async () => {
       try {
-        battery.value = await api.battery(props.server.host);
+        battery.value = await api.battery(props.server.host, props.server.secret);
         error.value = '';
       }
-      catch (e) {
+      catch (e: any) {
         error.value = e.message;
       }
-    });
+    };
+
+    watch([() => props.server.host, () => props.server.secret], () => {
+      checkBattery();
+    }, { immediate: true });
 
     return () => <NThing style={{ margin: '8px 0' }}>
       {{
