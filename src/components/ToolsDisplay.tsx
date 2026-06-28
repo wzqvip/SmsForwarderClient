@@ -1,4 +1,4 @@
-import { defineComponent, onMounted, PropType, ref } from 'vue';
+import { defineComponent, watch, PropType, ref } from 'vue';
 import { Battery, LocationInfo, ServerConfig } from '@/types/api';
 import api from '@/requests/api.ts';
 import {
@@ -98,11 +98,11 @@ export default defineComponent({
       wolLoad.value = false;
     };
 
-    onMounted(() => {
+    watch([() => props.server.host, () => props.server.secret], () => {
       loadConfig();
       loadBattery();
       loadLocation();
-    });
+    }, { immediate: true });
 
     return () => (
       <NGrid cols="1 m:2" x-gap="16" y-gap="16" responsive="screen">

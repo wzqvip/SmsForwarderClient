@@ -10,6 +10,7 @@ import {
   NTabPane,
   NList,
   NListItem,
+  useMessage,
 } from 'naive-ui';
 import ServerBlock from '@/components/ServerBlock.tsx';
 import SmsDisplay from '@/components/SmsDisplay.tsx';
@@ -17,6 +18,7 @@ import CallLogDisplay from '@/components/CallLogDisplay.tsx';
 import ContactDisplay from '@/components/ContactDisplay.tsx';
 import ToolsDisplay from '@/components/ToolsDisplay.tsx';
 import AddServerForm from '@/components/AddServerForm.tsx';
+import EditServerForm from '@/components/EditServerForm.tsx';
 import SendSmsForm from '@/components/SendSmsForm.tsx';
 
 export default defineComponent({
@@ -25,10 +27,89 @@ export default defineComponent({
     const selectedServerName = ref('');
     const selectedServer = computed(() => servers.value.find(it => it.name === selectedServerName.value));
     const addFormShow = ref(false);
+    const editFormShow = ref(false);
     const sendFormShow = ref(false);
+    const editingServer = ref<Server>();
+    const message = useMessage();
+    const fileInputRef = ref<HTMLInputElement | null>(null);
+
+    const handleSaveServer = (oldName: string, updatedServer: Server) => {
+      const index = servers.value.findIndex(it => it.name === oldName);
+      if (index !== -1) {
+        servers.value[index] = updatedServer;
+        if (selectedServerName.value === oldName) {
+          selectedServerName.value = updatedServer.name;
+        }
+      }
+    };
+
+    const exportServers = () => {
+      try {
+        const dataStr = JSON.stringify(servers.value, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', 'sms_forwarder_servers.json');
+        linkElement.click();
+        message.success('导出设备列表成功');
+      } catch (e: any) {
+        message.error('导出失败: ' + e.message);
+      }
+    };
+
+    const triggerImport = () => {
+      fileInputRef.value?.click();
+    };
+
+    const handleImportFile = (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed)) {
+            const isValid = parsed.every(it => typeof it.name === 'string' && typeof it.host === 'string');
+            if (isValid) {
+              const existingNames = new Set(servers.value.map(it => it.name));
+              let addedCount = 0;
+              parsed.forEach(it => {
+                if (!existingNames.has(it.name)) {
+                  servers.value.push(it);
+                  addedCount++;
+                }
+              });
+              message.success(`成功导入 ${addedCount} 个新服务器设备`);
+            } else {
+              message.error('导入的文件数据格式不正确');
+            }
+          } else {
+            message.error('导入的文件内容应为服务器列表数组');
+          }
+        } catch (err: any) {
+          message.error('解析 JSON 失败: ' + err.message);
+        }
+        target.value = '';
+      };
+      reader.readAsText(file);
+    };
 
     return () => <NLayout position="absolute" has-sider>
-      <NLayoutSider content-style="padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+      <NLayoutSider
+        bordered
+        show-trigger="bar"
+        collapse-mode="width"
+        collapsed-width={0}
+        resizable
+        default-width={260}
+        min-width={200}
+        max-width={450}
+        content-style="padding: 12px; display: flex; flex-direction: column; gap: 12px; height: 100%; box-sizing: border-box;"
+      >
         <NButton
           type="primary"
           block
@@ -49,10 +130,27 @@ export default defineComponent({
                 border: 'none',
               }}
             >
-              <ServerBlock server={it} />
+              <ServerBlock
+                server={it}
+                onEdit={() => {
+                  editingServer.value = it;
+                  editFormShow.value = true;
+                }}
+              />
             </NListItem>
           ))}
         </NList>
+        <NSpace justify="space-between" style={{ borderTop: '1px solid #efeff5', paddingTop: '10px' }}>
+          <NButton size="small" onClick={exportServers} style={{ flex: 1 }}>导出设备</NButton>
+          <NButton size="small" onClick={triggerImport} style={{ flex: 1 }}>导入设备</NButton>
+        </NSpace>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleImportFile}
+          accept=".json"
+          style={{ display: 'none' }}
+        />
       </NLayoutSider>
       {selectedServerName.value && <NLayoutContent>
         <NSpace vertical style={{ margin: '16px' }}>
@@ -84,6 +182,11 @@ export default defineComponent({
         <SendSmsForm v-model:show={sendFormShow.value} server={selectedServer.value!} />
       </NLayoutContent>}
       <AddServerForm v-model:show={addFormShow.value} add={server => servers.value.push(server)} />
+      <EditServerForm
+        v-model:show={editFormShow.value}
+        server={editingServer.value}
+        save={handleSaveServer}
+      />
     </NLayout>;
   },
 });
